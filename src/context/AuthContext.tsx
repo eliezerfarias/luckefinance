@@ -1,0 +1,144 @@
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
+import { User, AuthError } from '@supabase/supabase-js';
+
+interface AuthContextType {
+  user: User | null;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, username: string, nickname: string) => Promise<void>;
+  signOut: () => Promise<void>;
+  loading: boolean;
+  error: string | null;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        // Check active sessions and sets the user
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          throw sessionError;
+        }
+
+        setUser(session?.user ?? null);
+        
+        // Listen for changes on auth state
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+          setUser(session?.user ?? null);
+          setError(null);
+
+          if (event === 'TOKEN_REFRESHED') {
+            // Session was successfully refreshed
+            setError(null);
+          } else if (event === 'SIGNED_OUT') {
+            // Clear any stored session data
+            await supabase.auth.signOut();
+            setUser(null);
+          }
+        });
+
+        return () => {
+          subscription.unsubscribe();
+        };
+      } catch (err) {
+        const authError = err as AuthError;
+        if (authError.message.includes('refresh_token_not_found')) {
+          // Handle invalid refresh token by signing out
+          await supabase.auth.signOut();
+          setUser(null);
+          setError('Session expired. Please sign in again.');
+        } else {
+          setError(authError.message);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
+  }, []);
+
+  const signUp = async (email: string, password: string, username: string, nickname: string) => {
+    try {
+      setError(null);
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: window.location.origin,
+        },
+      });
+
+      if (authError) throw authError;
+
+      if (authData.user) {
+        const { error: profileError } = await supabase
+          .from('users')
+          .insert([
+            {
+              id: authData.user.id,
+              email,
+              username,
+              nickname,
+            },
+          ]);
+
+        if (profileError) throw profileError;
+      }
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message);
+      throw error;
+    }
+  };
+
+  const signIn = async (email: string, password: string) => {
+    try {
+      setError(null);
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message);
+      throw error;
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      setError(null);
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message);
+      throw error;
+    }
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, signIn, signUp, signOut, loading, error }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
