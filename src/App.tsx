@@ -1,8 +1,10 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { FinancialProvider } from './context/FinancialContext';
 import Dashboard from './components/Dashboard';
 import LoginForm from './components/Auth/LoginForm';
+import Landing from './components/Landing';
 import { useAuth } from './context/AuthContext';
 
 const AppContent = () => {
@@ -18,19 +20,25 @@ const AppContent = () => {
 
   return user ? (
     <FinancialProvider>
-      <div className="min-h-screen bg-gray-900 text-gray-100">
-        <Dashboard />
-      </div>
+      <Routes>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/" element={<Landing />} />
+      </Routes>
     </FinancialProvider>
   ) : (
-    <LoginForm />
+    <Routes>
+      <Route path="/login" element={<LoginForm />} />
+      <Route path="/" element={<Landing />} />
+    </Routes>
   );
 };
 
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <Router>
+        <AppContent />
+      </Router>
     </AuthProvider>
   );
 }
