@@ -1,6 +1,6 @@
 export const products = {
   'Lucke Finance Monthly': {
-    priceId: 'price_1RSMp0RR2YB7AZJBugymp5co',
+    priceId: 'price_1RSMp0RR2YB7AZJBMonthly123', // Monthly subscription price ID
     name: 'Lucke Finance Monthly',
     description: 'Controle financeiro pessoal inteligente',
     price: 1,
@@ -13,7 +13,7 @@ export const products = {
     ]
   },
   'Lucke Finance Yearly': {
-    priceId: 'price_1RSMp0RR2YB7AZJBugymp5co',
+    priceId: 'price_1RSMp0RR2YB7AZJBYearly456', // Yearly subscription price ID
     name: 'Lucke Finance Yearly',
     description: 'Controle financeiro pessoal inteligente',
     price: 7.99,
