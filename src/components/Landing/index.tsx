@@ -186,7 +186,7 @@ const Landing = () => {
             {Object.entries(products).map(([id, product]) => (
               <div
                 key={id}
-                className="bg-gray-900 rounded-2xl p-8 border border-gray-700 hover:border-green-500 transition-all duration-300"
+                className="bg-[#1a1f2e] rounded-2xl p-8 border border-gray-700/50 hover:border-green-500/50 transition-all duration-300"
               >
                 <h3 className="text-xl font-semibold text-white mb-2">{product.name}</h3>
                 <div className="flex items-baseline mb-6">
@@ -197,15 +197,15 @@ const Landing = () => {
                 </div>
                 <ul className="space-y-4 mb-8">
                   {product.features.map((feature, index) => (
-                    <li key={index} className="flex items-center gap-2 text-gray-300">
-                      <CheckCircle2 className="w-5 h-5 text-green-500" />
+                    <li key={index} className="flex items-center gap-3 text-gray-300">
+                      <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
                       {feature}
                     </li>
                   ))}
                 </ul>
                 <button
                   onClick={() => handlePurchase(id as keyof typeof products)}
-                  className="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg font-medium transition-colors"
+                  className="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg font-medium transition-all duration-300 hover:shadow-lg hover:shadow-green-500/20"
                 >
                   Começar Agora
                 </button>
