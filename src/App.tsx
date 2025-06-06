@@ -21,7 +21,7 @@ const AppContent = () => {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
-      <Route path="/login" element={!user ? <LoginForm /> : <Navigate to="/dashboard" replace />} />
+      <Route path="/login" element={!user ? <LoginForm /> : <Navigate to="/dashboard\" replace />} />
       <Route 
         path="/dashboard" 
         element={
