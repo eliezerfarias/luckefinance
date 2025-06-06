@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { FinancialProvider } from './context/FinancialContext';
 import Dashboard from './components/Dashboard';
@@ -13,22 +13,27 @@ const AppContent = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-white">Carregando...</div>
+        <div className="text-white text-lg">Carregando...</div>
       </div>
     );
   }
 
-  return user ? (
-    <FinancialProvider>
-      <Routes>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/" element={<Landing />} />
-      </Routes>
-    </FinancialProvider>
-  ) : (
+  return (
     <Routes>
-      <Route path="/login" element={<LoginForm />} />
       <Route path="/" element={<Landing />} />
+      <Route path="/login" element={!user ? <LoginForm /> : <Navigate to="/dashboard" replace />} />
+      <Route 
+        path="/dashboard" 
+        element={
+          user ? (
+            <FinancialProvider>
+              <Dashboard />
+            </FinancialProvider>
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        } 
+      />
     </Routes>
   );
 };
@@ -37,7 +42,9 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <AppContent />
+        <div className="min-h-screen bg-gray-900">
+          <AppContent />
+        </div>
       </Router>
     </AuthProvider>
   );

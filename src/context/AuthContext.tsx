@@ -2,8 +2,16 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { User, AuthError } from '@supabase/supabase-js';
 
+interface UserProfile {
+  id: string;
+  email: string;
+  username?: string;
+  nickname?: string;
+}
+
 interface AuthContextType {
   user: User | null;
+  userProfile: UserProfile | null;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, username: string, nickname: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -15,6 +23,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,10 +39,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         setUser(session?.user ?? null);
         
+        if (session?.user) {
+          await loadUserProfile(session.user.id);
+        }
+        
         // Listen for changes on auth state
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
           setUser(session?.user ?? null);
           setError(null);
+
+          if (session?.user) {
+            await loadUserProfile(session.user.id);
+          } else {
+            setUserProfile(null);
+          }
 
           if (event === 'TOKEN_REFRESHED') {
             // Session was successfully refreshed
@@ -42,6 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Clear any stored session data
             await supabase.auth.signOut();
             setUser(null);
+            setUserProfile(null);
           }
         });
 
@@ -54,6 +74,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Handle invalid refresh token by signing out
           await supabase.auth.signOut();
           setUser(null);
+          setUserProfile(null);
           setError('Session expired. Please sign in again.');
         } else {
           setError(authError.message);
@@ -65,6 +86,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initializeAuth();
   }, []);
+
+  const loadUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, email, username, nickname')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error loading user profile:', error);
+        return;
+      }
+
+      setUserProfile(data);
+    } catch (error) {
+      console.error('Error loading user profile:', error);
+    }
+  };
 
   const signUp = async (email: string, password: string, username: string, nickname: string) => {
     try {
@@ -121,6 +161,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setError(null);
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      setUserProfile(null);
     } catch (err) {
       const error = err as Error;
       setError(error.message);
@@ -129,7 +170,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, signIn, signUp, signOut, loading, error }}>
+    <AuthContext.Provider value={{ user, userProfile, signIn, signUp, signOut, loading, error }}>
       {children}
     </AuthContext.Provider>
   );
