@@ -56,6 +56,7 @@ const TransactionsTable: React.FC = () => {
   };
 
   const handleEditTransaction = (transaction: Transaction) => {
+    console.log('Editing transaction:', transaction); // Debug log
     setTransactionType(transaction.type);
     setEditingTransaction(transaction);
     setShowForm(true);
@@ -169,7 +170,7 @@ const TransactionsTable: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => handleMonthChange(-1)}
-              className="p-1 hover:bg-gray-700 rounded"
+              className="p-1 hover:bg-gray-700 rounded text-white"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
@@ -184,7 +185,7 @@ const TransactionsTable: React.FC = () => {
             </div>
             <button
               onClick={() => handleMonthChange(1)}
-              className="p-1 hover:bg-gray-700 rounded"
+              className="p-1 hover:bg-gray-700 rounded text-white"
             >
               <ArrowRight className="w-4 h-4" />
             </button>
@@ -295,7 +296,7 @@ const TransactionsTable: React.FC = () => {
                       <select
                         value={transaction.status}
                         onChange={(e) => handleStatusChange(transaction, e.target.value)}
-                        className="bg-gray-700 border-none rounded text-sm"
+                        className="bg-gray-700 border-none rounded text-sm text-white"
                       >
                         {transaction.type === 'income' ? (
                           <>
@@ -319,7 +320,6 @@ const TransactionsTable: React.FC = () => {
                         transaction.recurring === 'recurring'
                           ? 'bg-blue-500/10 text-blue-500'
                           : 'bg-gray-500/10 text-gray-400'
-                
                       }`}
                     >
                       {transaction.recurring === 'recurring' ? 'Recorrente' : 'Único'}
@@ -329,13 +329,15 @@ const TransactionsTable: React.FC = () => {
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => handleEditTransaction(transaction)}
-                        className="text-gray-400 hover:text-blue-500"
+                        className="text-gray-400 hover:text-blue-500 transition-colors p-1 rounded hover:bg-gray-700"
+                        title="Editar transação"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => removeTransaction(transaction.id)}
-                        className="text-gray-400 hover:text-red-500"
+                        className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded hover:bg-gray-700"
+                        title="Excluir transação"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
