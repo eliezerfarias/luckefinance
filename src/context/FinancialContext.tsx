@@ -29,6 +29,7 @@ interface FinancialContextType {
   toggleIncludeDebtsInExpenses: () => void;
   selectedMonth: string;
   setSelectedMonth: (month: string) => void;
+  addCategory: (name: string, type: 'income' | 'expense') => Promise<void>;
 }
 
 const defaultGoal: Omit<FinancialGoal, 'id'> = {
@@ -233,6 +234,25 @@ export const FinancialProvider: React.FC<{ children: ReactNode }> = ({ children 
       }
     } catch (error) {
       console.error('Error loading financial goal:', error);
+    }
+  };
+
+  const addCategory = async (name: string, type: 'income' | 'expense') => {
+    if (!user) throw new Error('User not authenticated');
+
+    try {
+      const { error } = await supabase
+        .from('categories')
+        .insert([{
+          user_id: user.id,
+          name,
+          type
+        }]);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error adding category:', error);
+      throw error;
     }
   };
 
@@ -460,7 +480,7 @@ export const FinancialProvider: React.FC<{ children: ReactNode }> = ({ children 
   };
 
   const selectAllTransactions = () => {
-    setSelectedTransactions(transactions.map(t => t.id));
+    setSelectedTransactions(filteredTransactions.map(t => t.id));
   };
 
   const clearSelectedTransactions = () => {
@@ -513,7 +533,8 @@ export const FinancialProvider: React.FC<{ children: ReactNode }> = ({ children 
         includeDebtsInExpenses,
         toggleIncludeDebtsInExpenses,
         selectedMonth,
-        setSelectedMonth
+        setSelectedMonth,
+        addCategory
       }}
     >
       {children}

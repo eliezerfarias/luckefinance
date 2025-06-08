@@ -125,7 +125,12 @@ const TransactionsTable: React.FC = () => {
             }`}
             onClick={() => setActiveTab('all')}
           >
-            Todas
+            Todas ({transactions.filter(t => {
+              const transactionDate = new Date(t.date);
+              const [year, month] = selectedMonth.split('-');
+              return transactionDate.getFullYear() === parseInt(year) && 
+                     transactionDate.getMonth() === parseInt(month) - 1;
+            }).length})
           </button>
           <button
             className={`px-4 py-3 text-sm font-medium ${
@@ -135,7 +140,13 @@ const TransactionsTable: React.FC = () => {
             }`}
             onClick={() => setActiveTab('expenses')}
           >
-            Despesas
+            Despesas ({transactions.filter(t => {
+              const transactionDate = new Date(t.date);
+              const [year, month] = selectedMonth.split('-');
+              return t.type === 'expense' &&
+                     transactionDate.getFullYear() === parseInt(year) && 
+                     transactionDate.getMonth() === parseInt(month) - 1;
+            }).length})
           </button>
           <button
             className={`px-4 py-3 text-sm font-medium ${
@@ -145,7 +156,13 @@ const TransactionsTable: React.FC = () => {
             }`}
             onClick={() => setActiveTab('income')}
           >
-            Receitas
+            Receitas ({transactions.filter(t => {
+              const transactionDate = new Date(t.date);
+              const [year, month] = selectedMonth.split('-');
+              return t.type === 'income' &&
+                     transactionDate.getFullYear() === parseInt(year) && 
+                     transactionDate.getMonth() === parseInt(month) - 1;
+            }).length})
           </button>
         </nav>
       </div>
@@ -223,9 +240,9 @@ const TransactionsTable: React.FC = () => {
         />
       )}
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto max-h-96 overflow-y-auto">
         <table className="min-w-full divide-y divide-gray-700">
-          <thead className="bg-gray-700">
+          <thead className="bg-gray-700 sticky top-0">
             <tr>
               <th scope="col" className="p-4 w-8">
                 <input
