@@ -56,9 +56,9 @@ const TransactionsTable: React.FC = () => {
   };
 
   const handleEditTransaction = (transaction: Transaction) => {
-    console.log('Editing transaction:', transaction); // Debug log
-    setTransactionType(transaction.type);
+    console.log('Editing transaction:', transaction);
     setEditingTransaction(transaction);
+    setTransactionType(transaction.type);
     setShowForm(true);
   };
 
@@ -329,14 +329,14 @@ const TransactionsTable: React.FC = () => {
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => handleEditTransaction(transaction)}
-                        className="text-gray-400 hover:text-blue-500 transition-colors p-1 rounded hover:bg-gray-700"
+                        className="text-gray-400 hover:text-blue-500 transition-colors p-2 rounded hover:bg-gray-700"
                         title="Editar transação"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => removeTransaction(transaction.id)}
-                        className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded hover:bg-gray-700"
+                        className="text-gray-400 hover:text-red-500 transition-colors p-2 rounded hover:bg-gray-700"
                         title="Excluir transação"
                       >
                         <Trash2 className="w-4 h-4" />

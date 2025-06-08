@@ -47,6 +47,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
 
   useEffect(() => {
     if (transaction) {
+      console.log('Loading transaction for editing:', transaction);
       setFormData({
         ...transaction,
         date: new Date(transaction.date)
@@ -57,12 +58,17 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
       const defaultDate = new Date();
       defaultDate.setFullYear(parseInt(year));
       defaultDate.setMonth(parseInt(month) - 1);
-      setFormData(prev => ({
-        ...prev,
-        date: defaultDate
-      }));
+      setFormData({
+        description: '',
+        category: '',
+        date: defaultDate,
+        amount: 0,
+        type,
+        status: type === 'income' ? 'pending' : 'pending',
+        recurring: 'one-time'
+      });
     }
-  }, [transaction, selectedMonth]);
+  }, [transaction, selectedMonth, type]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -116,23 +122,30 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
 
     try {
       if (transaction) {
+        console.log('Updating transaction:', transaction.id, formData);
         await updateTransaction(transaction.id, {
           ...formData,
           id: transaction.id,
           user_id: user.id,
           type,
+          description: formData.description!,
+          category: formData.category || filteredCategories[0],
+          date: formData.date!,
+          amount: formData.amount!,
+          status: formData.status!,
+          recurring: formData.recurring!
         } as Transaction);
       } else {
         await addTransaction({
           ...formData,
           user_id: user.id,
           type,
-          description: formData.description,
+          description: formData.description!,
           category: formData.category || filteredCategories[0],
-          date: formData.date || new Date(),
-          amount: formData.amount,
-          status: formData.status || (type === 'income' ? 'pending' : 'pending'),
-          recurring: formData.recurring || 'one-time'
+          date: formData.date!,
+          amount: formData.amount!,
+          status: formData.status!,
+          recurring: formData.recurring!
         } as Transaction);
       }
       onClose();
@@ -142,8 +155,13 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     }
   };
 
+  const formatDateForInput = (date: Date | undefined): string => {
+    if (!date) return '';
+    return date.toISOString().split('T')[0];
+  };
+
   return (
-    <div className="bg-gray-800 p-4">
+    <div className="bg-gray-800 p-4 border-b border-gray-700">
       <h3 className="text-lg font-medium text-white mb-4">
         {transaction ? 'Editar' : 'Nova'} {type === 'income' ? 'Receita' : 'Despesa'}
       </h3>
@@ -165,7 +183,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
             id="description"
             required
             className="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            value={formData.description}
+            value={formData.description || ''}
             onChange={handleChange}
           />
         </div>
@@ -197,7 +215,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
               id="category"
               required
               className="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              value={formData.category}
+              value={formData.category || ''}
               onChange={handleChange}
             >
               <option value="">Selecione uma categoria</option>
@@ -221,7 +239,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
             id="date"
             required
             className="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            value={formData.date?.toISOString().split('T')[0]}
+            value={formatDateForInput(formData.date)}
             onChange={handleChange}
           />
         </div>
@@ -252,7 +270,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
             id="status"
             required
             className="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            value={formData.status}
+            value={formData.status || ''}
             onChange={handleChange}
           >
             {type === 'income' ? (
@@ -279,7 +297,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
             id="recurring"
             required
             className="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            value={formData.recurring}
+            value={formData.recurring || ''}
             onChange={handleChange}
           >
             <option value="one-time">Único</option>
