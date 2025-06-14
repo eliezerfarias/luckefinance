@@ -34,6 +34,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
+          // Handle refresh token errors silently
+          if (sessionError.message.includes('refresh_token_not_found') || 
+              sessionError.message.includes('Invalid Refresh Token')) {
+            await supabase.auth.signOut();
+            setUser(null);
+            setUserProfile(null);
+            setLoading(false);
+            return;
+          }
           throw sessionError;
         }
 
@@ -59,7 +68,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setError(null);
           } else if (event === 'SIGNED_OUT') {
             // Clear any stored session data
-            await supabase.auth.signOut();
             setUser(null);
             setUserProfile(null);
           }
@@ -70,12 +78,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       } catch (err) {
         const authError = err as AuthError;
-        if (authError.message.includes('refresh_token_not_found')) {
-          // Handle invalid refresh token by signing out
+        if (authError.message.includes('refresh_token_not_found') || 
+            authError.message.includes('Invalid Refresh Token')) {
+          // Handle invalid refresh token by signing out silently
           await supabase.auth.signOut();
           setUser(null);
           setUserProfile(null);
-          setError('Session expired. Please sign in again.');
         } else {
           setError(authError.message);
         }
@@ -114,25 +122,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password,
         options: {
           emailRedirectTo: window.location.origin,
+          data: {
+            username,
+            nickname,
+          },
         },
       });
 
       if (authError) throw authError;
 
-      if (authData.user) {
-        const { error: profileError } = await supabase
-          .from('users')
-          .insert([
-            {
-              id: authData.user.id,
-              email,
-              username,
-              nickname,
-            },
-          ]);
-
-        if (profileError) throw profileError;
-      }
+      // User profile will be created automatically by database trigger
+      // No need for client-side insert
     } catch (err) {
       const error = err as Error;
       setError(error.message);
